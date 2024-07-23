@@ -1,0 +1,73 @@
+% Parámetros del circuito RLC
+R = 1; % Resistencia en ohmios
+L = 1; % Inductancia en henrios
+C = 0.1; % Capacitancia en faradios
+
+% Paso 1: Definición de la Ecuación Diferencial del Sistema
+% La ecuación diferencial para el circuito RLC en serie es:
+% L*d^2q(t)/dt^2 + R*dq(t)/dt + q(t)/C = V_in(t)
+% Donde q(t) es la carga en el capacitor y dq(t)/dt es la corriente i(t).
+
+% Paso 2: Convertir la ecuación diferencial al dominio de Laplace
+% Aplicando la transformada de Laplace, obtenemos:
+% L*s^2*Q(s) + R*s*Q(s) + Q(s)/C = V_in(s)
+% Q(s) * (L*s^2 + R*s + 1/C) = V_in(s)
+% Función de Transferencia H(s) = Q(s)/V_in(s) = 1 / (L*s^2 + R*s + 1/C)
+
+% Memoria de Cálculo Funcional:
+% Coeficientes de la función de transferencia
+numerador = 1;
+denominador = [L, R, 1/C]; % [L*s^2 + R*s + 1/C]
+
+% Verificación numérica de la función de transferencia
+s = tf('s'); % Definir variable 's' para la función de transferencia
+H_s = numerador / (denominador(1)*s^2 + denominador(2)*s + denominador(3));
+
+disp('La función de transferencia H(s) es:');
+H_s
+
+% Paso 3: Definir la función para resolver las ecuaciones diferenciales
+function dqdt = rlc(t, q, R, L, C, Vin)
+    dqdt = [q(2); (Vin(t) - R*q(2) - q(1)/C) / L];
+end
+
+% Paso 4: Definir diferentes entradas
+Vin_step = @(t) 1 * (t >= 0); % Entrada escalón
+Vin_impulse = @(t) 1 * (t == 0); % Entrada impulso
+Vin_ramp = @(t) t; % Entrada rampa
+Vin_sine = @(t) sin(t); % Entrada senoidal
+
+% Paso 5: Simulación
+tspan = [0 10];
+q0 = [0; 0]; % Condiciones iniciales
+
+% Simulación de la respuesta a diferentes entradas
+figure;
+
+subplot(2,2,1);
+[t, q] = ode45(@(t, q) rlc(t, q, R, L, C, Vin_step), tspan, q0);
+plot(t, q(:,1));
+title('Respuesta a entrada escalón');
+xlabel('Tiempo (s)');
+ylabel('Carga q(t)');
+
+subplot(2,2,2);
+[t, q] = ode45(@(t, q) rlc(t, q, R, L, C, Vin_impulse), tspan, q0);
+plot(t, q(:,1));
+title('Respuesta a entrada impulso');
+xlabel('Tiempo (s)');
+ylabel('Carga q(t)');
+
+subplot(2,2,3);
+[t, q] = ode45(@(t, q) rlc(t, q, R, L, C, Vin_ramp), tspan, q0);
+plot(t, q(:,1));
+title('Respuesta a entrada rampa');
+xlabel('Tiempo (s)');
+ylabel('Carga q(t)');
+
+subplot(2,2,4);
+[t, q] = ode45(@(t, q) rlc(t, q, R, L, C, Vin_sine), tspan, q0);
+plot(t, q(:,1));
+title('Respuesta a entrada senoidal');
+xlabel('Tiempo (s)');
+ylabel('Carga q(t)');
